@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  gameserver:
+    build: .
+    container_name: gameserver
+    ports:
+      - "7777:7777/udp"   # Porta UDP do servidor de jogo
+      - "5555:5555/tcp"   # Porta TCP, se necessário
+    restart: unless-stopped
+    networks:
+      - game_network
+
+networks:
+  game_network:
+    driver: bridge
