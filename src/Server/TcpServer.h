@@ -16,19 +16,20 @@ class TcpServer {
 public:
 	TcpServer(boost::asio::io_context& io_context, int port, GameServer& gameServer);
 	int getPort() const { return port; }
-	void broadcastPlayerDisconnection(int playerId);
-	void broadcastMessage(const std::string& message);
+	void disconectPlayer(int playerId);
+	void broadcastMessage(std::shared_ptr<std::string> message);
+	void sendPlayerMessage(int playerId, std::shared_ptr<std::string> message);
 	bool isPlayerConnected(int playerId);
 
 private:
 	void startAccept();
 	void handleAccept(std::shared_ptr<tcp::socket> socket, const boost::system::error_code& error);
-	void processClientMessage(std::shared_ptr<tcp::socket> socket);
+	void processClientMessage(std::shared_ptr<tcp::socket> socket, int playerId);
 	int generatePlayerId();
-	float generateRandomPosition(float mapSize, float playerHalfSize);
 
 	std::unordered_map<std::shared_ptr<tcp::socket>, int> connectedClients;
-	std::set<int> playersConnected;
+	std::unordered_map<int, std::shared_ptr<tcp::socket>> playersConnected;
+
 	tcp::acceptor acceptor;
 	int port;
 	GameServer& gameServer;

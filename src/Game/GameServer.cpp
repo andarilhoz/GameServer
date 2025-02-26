@@ -1,4 +1,4 @@
-#include "GameServer.h"
+﻿#include "GameServer.h"
 
 #include <chrono>
 #include <thread>
@@ -15,6 +15,7 @@ GameServer::GameServer(int tcpPort, int udpPort)
     : tcpServer(io_context, tcpPort, *this),
     udpServer(io_context, udpPort, *this),
     movementHandler(gameState),
+    mapController(),
     running(true)
 {
     Logger::info("Initializing loop thread");
@@ -104,6 +105,14 @@ std::string GameServer::getAllPlayersInfo()
     return playerData.dump();
 }
 
+std::string GameServer::generateDisconnectPlayerMessage(int playerId) {
+    json disconnectMsg = {
+        {"type", "player_disconnect"},
+        {"playerId", playerId}
+    };
+    return disconnectMsg.dump();
+}
+
 void GameServer::checkForDisconnectedPlayers()
 {
     std::vector<int> playersToRemove;
@@ -123,5 +132,52 @@ void GameServer::checkForDisconnectedPlayers()
 void GameServer::removePlayerFromGame(int playerId) {
     gameState.removePlayer(playerId);
     udpServer.removeClient(playerId);
-    tcpServer.broadcastPlayerDisconnection(playerId);
+    tcpServer.disconectPlayer(playerId);
+
+    auto disconnectMessage = std::make_shared<std::string>(generateDisconnectPlayerMessage(playerId));
+    tcpServer.broadcastMessage(disconnectMessage);
+}
+
+void GameServer::processTcpMessage(std::string message, int playerId) {
+    try {
+        json request = json::parse(message);
+
+        if (!request.contains("nickname")) {
+            Logger::error("❌ Mensagem sem 'nickname'!");
+            return;
+        }
+
+        // Gera ID e posição inicial
+        std::string nickname = request["nickname"];
+        float startX = mapController.generateRandomPosition();
+        float startY = mapController.generateRandomPosition();
+
+        // Cria o jogador e adiciona no GameServer
+        Player newPlayer(playerId, nickname, startX, startY, 1 /*size*/, 0 /*direction*/);
+        addPlayer(newPlayer);
+
+        // Prepara JSON de resposta
+        json response = {
+            {"type",     "connect"},
+            {"playerId", playerId},
+            {"nickname", nickname},
+            //{"foods", foods["foods"]},
+            {"x",        startX},
+            {"y",        startY}
+        };
+
+        // Envia de forma assíncrona
+        auto responseMessage = std::make_shared<std::string>(response.dump());
+        tcpServer.sendPlayerMessage(playerId, responseMessage);
+
+        Logger::info("✅ Novo jogador conectado! Nickname: {}, ID: {}, Posição: ({}, {})",
+            nickname, playerId, startX, startY);
+    }
+    catch (const std::exception& e) {
+        Logger::error("❌ Erro ao processar mensagem do cliente: {}", e.what());
+    }
+}
+
+void GameServer::processUdpMessage(std::string message, int playerId) {
+
 }
