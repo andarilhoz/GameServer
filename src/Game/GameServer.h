@@ -33,6 +33,7 @@ private:
 	void checkForDisconnectedPlayers();
 
 	std::string generateDisconnectPlayerMessage(int playerId);
+	std::string generateConnectedPlayerMessage(Player player);
 
 	boost::asio::io_context io_context;
 	TcpServer tcpServer;

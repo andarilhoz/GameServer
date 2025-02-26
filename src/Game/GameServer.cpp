@@ -31,6 +31,9 @@ void GameServer::run()
 
 void GameServer::addPlayer(Player player)
 {
+    auto connectedMessage = std::make_shared<std::string>(generateConnectedPlayerMessage(player));
+    Logger::info("New player connected: {}", player.getNickname());
+    tcpServer.broadcastMessage(connectedMessage);
     gameState.addPlayer(player);
 }
 
@@ -103,9 +106,21 @@ std::string GameServer::getAllPlayersInfo()
 std::string GameServer::generateDisconnectPlayerMessage(int playerId) {
     json disconnectMsg = {
         {"type", "player_disconnect"},
-        {"playerId", playerId}
+        {"id", playerId}
     };
     return disconnectMsg.dump();
+}
+
+std::string GameServer::generateConnectedPlayerMessage(Player player) {
+    json connectedMsg = {
+        {"type", "player_connect"},
+        {"id", player.getId()},
+        {"x", player.getX()},
+        {"y", player.getY()},
+        {"nickname", player.getNickname()},
+    };
+
+    return connectedMsg.dump();
 }
 
 void GameServer::checkForDisconnectedPlayers()
@@ -135,6 +150,9 @@ void GameServer::removePlayerFromGame(int playerId) {
 
 void GameServer::processTcpMessage(std::string message, int playerId) {
     try {
+        if (gameState.isPlayerAdded(playerId))
+            return;
+
         json request = json::parse(message);
 
         if (!request.contains("nickname")) {
@@ -148,18 +166,28 @@ void GameServer::processTcpMessage(std::string message, int playerId) {
         float startY = mapController.generateRandomPosition();
 
         // Cria o jogador e adiciona no GameServer
+       
+        
         Player newPlayer(playerId, nickname, startX, startY, 1 /*size*/, 0 /*direction*/);
         addPlayer(newPlayer);
+        
+        auto allPlayers = gameState.getAllPlayers();
 
         // Prepara JSON de resposta
         json response = {
-            {"type",     "connect"},
-            {"playerId", playerId},
-            {"nickname", nickname},
-            //{"foods", foods["foods"]},
-            {"x",        startX},
-            {"y",        startY}
+            {"type", "connect"},
+            {"id",  playerId}
         };
+
+        for (auto& [id, player] : allPlayers) {
+            response["players"].push_back({
+                {"id",       id},
+                {"nickname", player.getNickname()},
+                {"x",        player.getX()},
+                {"y",        player.getY()},
+                {"size",     player.getSize()}
+                });
+        }
 
         // Envia de forma assíncrona
         auto responseMessage = std::make_shared<std::string>(response.dump());

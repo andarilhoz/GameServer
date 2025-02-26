@@ -45,6 +45,10 @@ Player& GameState::getPlayer(int playerId) {
 	return players[playerId];
 }
 
+bool GameState::isPlayerAdded(int playerId) {
+	return players.find(playerId) != players.end();
+}
+
 std::unordered_map<int, Food> GameState::getFoodList() {
 	return foodList;
 }

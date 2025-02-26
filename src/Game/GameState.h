@@ -18,6 +18,7 @@ public:
 	Food getFood(int foodId);
 	Player& getPlayer(int playerId);
 	bool isPlayerInactive(int playerId, float timeoutSeconds);
+	bool isPlayerAdded(int playerId);
 	std::unordered_map<int, Player>& getAllPlayers();
 
 private:

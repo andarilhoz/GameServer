@@ -82,15 +82,14 @@ void TcpServer::disconectPlayer(int playerId) {
     playersConnected.erase(playerId);
 }
 
-
 bool TcpServer::isPlayerConnected(int playerId)
 {
     return (playersConnected.find(playerId) != playersConnected.end());
 }
 
-
 void TcpServer::broadcastMessage(std::shared_ptr<std::string> message)
 {
+    message->push_back('\n');
     for (auto& [socket, id] : connectedClients) {
         boost::asio::async_write(
             *socket,
@@ -107,7 +106,7 @@ void TcpServer::broadcastMessage(std::shared_ptr<std::string> message)
 
 void TcpServer::sendPlayerMessage(int playerId, std::shared_ptr<std::string> message) {
     auto& socket = playersConnected[playerId];
-
+    message->push_back('\n');
     boost::asio::async_write(
         *socket,
         boost::asio::buffer(*message),
