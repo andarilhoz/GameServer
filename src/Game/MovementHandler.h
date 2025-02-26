@@ -10,7 +10,8 @@ using json = nlohmann::json;
 class MovementHandler {
 public:
 	MovementHandler(GameState& gameState);
-	void handleMovement(ClientUdpMessage movementData);
+	void handleDirectionChange(int playerId, float x, float y);
+	void updatePosition(Player& player, float deltaTime);
 private:
 	GameState& gameState;
 };

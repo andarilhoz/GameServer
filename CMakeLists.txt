@@ -27,7 +27,7 @@ add_executable(GameServer
     src/Game/GameState.h src/Game/GameState.cpp
     src/Game/MovementHandler.h src/Game/MovementHandler.cpp
     src/Server/ClientUdpMessage.h src/Server/ClientUdpMessage.cpp
-    src/Server/MessageType.h "src/Game/Food.h" "src/Game/Food.cpp")
+    src/Server/MessageType.h "src/Game/Food.h" "src/Game/Food.cpp" "src/Game/FoodController.h" "src/Game/FoodController.cpp")
 
 # Adiciona diretórios de includes
 target_include_directories(GameServer PRIVATE ${Boost_INCLUDE_DIRS})

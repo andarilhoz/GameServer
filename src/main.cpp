@@ -15,10 +15,6 @@ int main()
     try {
         GameServer server(TCP_PORT, UDP_PORT);
         server.run();
-
-        Logger::info("Enter para sair...");
-        std::cin.get();
-        server.stop();
     }
     catch (std::exception& e) {
         Logger::error("Erro: {}", e.what());

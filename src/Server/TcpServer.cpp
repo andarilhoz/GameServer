@@ -102,14 +102,14 @@ void TcpServer::processClientMessage(std::shared_ptr<tcp::socket> socket)
                     connectedClients[socket] = playerId;
                     playersConnected.insert(playerId);
 
-                    json foods = gameServer.getFoodInfo();
+                    //json foods = gameServer.getFoodInfo();
 
                     // Prepara JSON de resposta
                     json response = {
                         {"type",     "connect"},
                         {"playerId", playerId},
                         {"nickname", nickname},
-                        {"foods", foods["foods"]},
+                        //{"foods", foods["foods"]},
                         {"x",        startX},
                         {"y",        startY}
                     };

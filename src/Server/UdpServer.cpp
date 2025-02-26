@@ -46,13 +46,13 @@ void UdpServer::handle_receive(const boost::system::error_code& error, std::size
 
 
 			ClientUdpMessage message = ClientUdpMessage(type, playerId, x, y);
-			gameServer.processPlayerMovement(message);
+			gameServer.processPlayerDirection(message);
 		}
 		else {
 			Logger::error("Erro ao receber pacote UDP: {}", error.message());
 			if (error == boost::asio::error::connection_refused) {
 				if (players.find(remote_endpoint) != players.end()) {
-					gameServer.removePlayerFromEverything(players[remote_endpoint]);
+					gameServer.removePlayerFromGame(players[remote_endpoint]);
 
 				}
 				Logger::info("Cliente removido da lista de conexoes UDP: {}:{}", remote_endpoint.address().to_string(), remote_endpoint.port());
