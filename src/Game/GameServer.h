@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Server/UdpServer.h"
-#include "Server/TcpServer.h"
-#include "Game/GameState.h"
-#include "Game/MovementHandler.h"
+#include "../Server/UdpServer.h"
+#include "../Server/TcpServer.h"
+#include "GameState.h"
+#include "MovementHandler.h"
 #include <boost/asio.hpp>
-#include "Game/Player.h"
-#include "Server/ClientUdpMessage.h"
+#include "Player.h"
+#include "../Server/ClientUdpMessage.h"
 
 #include <thread>
 #include <atomic>
@@ -24,12 +24,19 @@ public:
 	void updateAllPlayers();
 	bool isPlayerTcpConnected(int playerId);
 	std::string getAllPlayersInfo();
+	json getFoodInfo();
 
 private:
 
 	void updatePlayerPositionFromDirection();
 	void broadcastPlayersPositions();
 	void checkForDisconnectedPlayers();
+	void sendFoodToClients();
+	void addFood(int foodId, float x, float y);
+	void generateFood();
+	bool isValidFoodPosition(float x, float y);
+	float generateRandomPosition();
+	int generateFoodId();
 
 	boost::asio::io_context io_context;
 	TcpServer tcpServer;

@@ -1,6 +1,6 @@
 ﻿#include "TcpServer.h"
 #include <nlohmann/json.hpp>
-#include "../GameServer.h"
+#include "../Game/GameServer.h"
 #include <random>
 #include "../Utils/Logger.h" // Ajuste o caminho do Logger, se necessário
 
@@ -102,11 +102,14 @@ void TcpServer::processClientMessage(std::shared_ptr<tcp::socket> socket)
                     connectedClients[socket] = playerId;
                     playersConnected.insert(playerId);
 
+                    json foods = gameServer.getFoodInfo();
+
                     // Prepara JSON de resposta
                     json response = {
                         {"type",     "connect"},
                         {"playerId", playerId},
                         {"nickname", nickname},
+                        {"foods", foods["foods"]},
                         {"x",        startX},
                         {"y",        startY}
                     };
@@ -228,4 +231,22 @@ void TcpServer::broadcastPlayerDisconnection(int playerId)
 bool TcpServer::isPlayerConnected(int playerId)
 {
     return (playersConnected.find(playerId) != playersConnected.end());
+}
+
+
+void TcpServer::broadcastMessage(const std::string& message)
+{
+    // Envia de forma assíncrona para cada cliente
+    for (auto& [socket, id] : connectedClients) {
+        boost::asio::async_write(
+            *socket,
+            boost::asio::buffer(message),
+            [message](const boost::system::error_code& error, std::size_t bytes)
+            {
+                if (error) {
+                    Logger::error("❌ Erro ao enviar mensagem de broadcast: {}", error.message());
+                }
+            }
+        );
+    }
 }

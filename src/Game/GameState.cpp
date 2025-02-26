@@ -45,6 +45,14 @@ Player& GameState::getPlayer(int playerId) {
 	return players[playerId];
 }
 
+std::unordered_map<int, Food> GameState::getFoodList() {
+	return foodList;
+}
+
+Food GameState::getFood(int foodId) {
+	return foodList[foodId];
+}
+
 std::unordered_map<int, Player>& GameState::getAllPlayers() {
 	return players;
 }
@@ -57,4 +65,9 @@ float GameState::getDeltaTime() {
 	lastUpdateTime = now;
 
 	return delta;
+}
+
+void GameState::spawnFood(int foodId, float x, float y) {
+	Food food = Food(foodId, x, y);
+	foodList[foodId] = food;
 }

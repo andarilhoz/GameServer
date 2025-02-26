@@ -17,6 +17,7 @@ public:
 	TcpServer(boost::asio::io_context& io_context, int port, GameServer& gameServer);
 	int getPort() const { return port; }
 	void broadcastPlayerDisconnection(int playerId);
+	void broadcastMessage(const std::string& message);
 	bool isPlayerConnected(int playerId);
 
 private:

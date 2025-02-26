@@ -2,7 +2,7 @@
 #include <iostream>
 #include "../Utils/Logger.h"
 #include <nlohmann/json.hpp>
-#include "../GameServer.h"
+#include "../Game/GameServer.h"
 #include "ClientUdpMessage.h"
 
 UdpServer::UdpServer(boost::asio::io_context& io_context, int port, GameServer& gameServer)
