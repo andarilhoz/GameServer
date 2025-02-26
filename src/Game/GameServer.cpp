@@ -160,13 +160,10 @@ void GameServer::processTcpMessage(std::string message, int playerId) {
             return;
         }
 
-        // Gera ID e posição inicial
+
         std::string nickname = request["nickname"];
         float startX = mapController.generateRandomPosition();
         float startY = mapController.generateRandomPosition();
-
-        // Cria o jogador e adiciona no GameServer
-       
         
         Player newPlayer(playerId, nickname, startX, startY, 1 /*size*/, 0 /*direction*/);
         addPlayer(newPlayer);
