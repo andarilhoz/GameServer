@@ -14,22 +14,22 @@ void GameState::removePlayer(int playerId) {
 }
 
 void GameState::updatePlayerPosition(int playerId, float x, float y) {
-	Logger::info("Localizando player: {}", playerId);
+	Logger::debug("Localizando player: {}", playerId);
 	if (players.find(playerId) == players.end())
 		return;
 
 	players[playerId].setPosition(x, y);
-	Logger::info("Jogador {}, movido para ({},{})", playerId, x, y);
+	Logger::debug("Jogador {}, movido para ({},{})", playerId, x, y);
 }
 
 void GameState::updatePlayerDirection(int playerId, float x, float y) {
-	Logger::info("Localizando player: {}", playerId);
+	Logger::debug("Localizando player: {}", playerId);
 	if (players.find(playerId) == players.end())
 		return;
 
 	players[playerId].setDirection(x, y);
 	lastActivity[playerId] = std::chrono::steady_clock::now();
-	Logger::info("Jogador {}, com direcao para ({},{})", playerId, x, y);
+	Logger::debug("Jogador {}, com direcao para ({},{})", playerId, x, y);
 }
 
 bool GameState::isPlayerInactive(int playerId, float timeoutSeconds) {

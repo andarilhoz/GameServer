@@ -4,7 +4,6 @@
 #include <thread>
 #include <nlohmann/json.hpp>
 
-#include "../Server/ClientUdpMessage.h"
 #include "../Utils/Logger.h"
 
 constexpr float DISCONECT_TIMEOUT = 25.0f;
@@ -29,10 +28,6 @@ void GameServer::run()
     io_context.run();
 }
 
-void GameServer::processPlayerDirection(ClientUdpMessage movementData)
-{
-    movementHandler.handleDirectionChange(movementData.playerId, movementData.x, movementData.y);
-}
 
 void GameServer::addPlayer(Player player)
 {
@@ -75,7 +70,7 @@ void GameServer::updatePlayerPositionFromDirection()
     auto& allPlayers = gameState.getAllPlayers();
     for (auto& [id, player] : allPlayers) {
         movementHandler.updatePosition(player, deltaTime);
-        Logger::info("Jogador {} movido para ({}, {})", id, player.getX(), player.getY());
+        Logger::debug("Jogador {} movido para ({}, {})", id, player.getX(), player.getY());
     }
 }
 
@@ -83,7 +78,7 @@ void GameServer::updatePlayerPositionFromDirection()
 void GameServer::broadcastPlayersStatus()
 {
     std::string message = getAllPlayersInfo();
-    udpServer.broadcastMessage(message);
+    udpServer.broadcastMessage(std::make_shared<std::string>(message));
 }
 
 
@@ -131,7 +126,7 @@ void GameServer::checkForDisconnectedPlayers()
 
 void GameServer::removePlayerFromGame(int playerId) {
     gameState.removePlayer(playerId);
-    udpServer.removeClient(playerId);
+    udpServer.removeClient(std::make_shared<int>(playerId));
     tcpServer.disconectPlayer(playerId);
 
     auto disconnectMessage = std::make_shared<std::string>(generateDisconnectPlayerMessage(playerId));
@@ -178,6 +173,18 @@ void GameServer::processTcpMessage(std::string message, int playerId) {
     }
 }
 
-void GameServer::processUdpMessage(std::string message, int playerId) {
+void GameServer::processUdpMessage(std::shared_ptr<std::string> message, boost::asio::ip::udp::endpoint connection) {
+    json parsedData = json::parse(*message);
 
+    int playerId = parsedData["playerId"];
+    float x = parsedData["x"];
+    float y = parsedData["y"];
+
+    if (!isPlayerTcpConnected(playerId)) {
+        return;
+    }
+
+    movementHandler.handleDirectionChange(playerId, x, y);
+
+    udpServer.addConnection(playerId, connection);
 }

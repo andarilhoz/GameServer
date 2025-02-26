@@ -6,7 +6,6 @@
 #include "MovementHandler.h"
 #include <boost/asio.hpp>
 #include "Player.h"
-#include "../Server/ClientUdpMessage.h"
 #include "MapController.h"
 
 #include <thread>
@@ -17,7 +16,6 @@ class GameServer {
 public:
 	GameServer(int tcpPort, int updPort);
 	void run();
-	void processPlayerDirection(ClientUdpMessage message);
 	void addPlayer(Player player);
 	void removePlayer(int playerId);
 	void removePlayerFromGame(int playerId);
@@ -26,7 +24,7 @@ public:
 	std::string getAllPlayersInfo();
 
 	void processTcpMessage(std::string message, int playerId);
-	void processUdpMessage(std::string message, int playerId);
+	void processUdpMessage(std::shared_ptr<std::string> message, boost::asio::ip::udp::endpoint connection);
 
 private:
 

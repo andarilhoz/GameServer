@@ -8,7 +8,7 @@ const int UDP_PORT = 7777;
 
 int main()
 {
-    Logger::setLogLevel(LogLevel::DEBUG);
+    Logger::setLogLevel(LogLevel::INFO);
 
     Logger::info("Main initializing");
 

@@ -15,7 +15,7 @@ MovementHandler::MovementHandler(GameState& gameState) : gameState(gameState) {}
 void MovementHandler::handleDirectionChange(int playerId, float x, float y) {
 	try {
 		gameState.updatePlayerDirection(playerId, x, y);
-		Logger::info("Movimento recebido de: {}, X={}, Y={}", playerId, x, y);
+		Logger::debug("Movimento recebido de: {}, X={}, Y={}", playerId, x, y);
 
 	}
 	catch (const json::exception& e) {

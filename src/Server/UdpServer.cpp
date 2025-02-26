@@ -3,10 +3,9 @@
 #include "../Utils/Logger.h"
 #include <nlohmann/json.hpp>
 #include "../Game/GameServer.h"
-#include "ClientUdpMessage.h"
 
 UdpServer::UdpServer(boost::asio::io_context& io_context, int port, GameServer& gameServer)
-	:socket(io_context, udp::endpoint(udp::v4(), port)), port(port), gameServer(gameServer) {
+	:socket(io_context, udp::endpoint(udp::v4(), port)), port(port), gameServer(gameServer), io_context(io_context) {
 	startReceive();
 }
 
@@ -18,87 +17,70 @@ void UdpServer::startReceive() {
 }
 
 void UdpServer::handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred) {
-	try {
-		if (!error) {
 
-			auto dataPtr = std::make_shared<std::string>(recv_buffer.data(), bytes_transferred);
-			json parsedData = json::parse(*dataPtr);
-
-			int playerId = parsedData["playerId"];
-			MessageType type = parsedData["type"] == "move" ? MessageType::move : MessageType::unknow;
-			float x = parsedData["x"];
-			float y = parsedData["y"];
-
-			if (!gameServer.isPlayerTcpConnected(playerId)) {
-				return;
+	if (!error) {
+		auto data = std::make_shared<std::string>(recv_buffer.data(), bytes_transferred);
+		gameServer.processUdpMessage(data, remote_endpoint);
+	}
+	else {
+		Logger::error("Erro ao receber pacote UDP: {}", error.message());
+		if (error == boost::asio::error::connection_refused) {
+			if (playersConnections.find(remote_endpoint) != playersConnections.end()) {
+				gameServer.removePlayerFromGame(playersConnections[remote_endpoint]);
 			}
-
-			connectedClients.insert(remote_endpoint);
-
-			if (playersEndpoints.find(playerId) == playersEndpoints.end()) {
-				Logger::info("Registrando novo cliente UDP - ID: {}", playerId);
-				players[remote_endpoint] = playerId;
-				playersEndpoints[playerId] = remote_endpoint;
-			}
-			else {
-				Logger::info("Cliente já registrado - ID: {}", playerId);
-			}
-
-
-			ClientUdpMessage message = ClientUdpMessage(type, playerId, x, y);
-			gameServer.processPlayerDirection(message);
+			Logger::info("Cliente removido da lista de conexoes UDP: {}:{}", remote_endpoint.address().to_string(), remote_endpoint.port());
 		}
-		else {
-			Logger::error("Erro ao receber pacote UDP: {}", error.message());
-			if (error == boost::asio::error::connection_refused) {
-				if (players.find(remote_endpoint) != players.end()) {
-					gameServer.removePlayerFromGame(players[remote_endpoint]);
+	}
 
+	startReceive();
+}
+
+void UdpServer::broadcastMessage(std::shared_ptr<std::string> message) {
+
+	for (const auto& [client, playerId] : playersConnections) {
+		socket.async_send_to(
+			boost::asio::buffer(*message),
+			client,
+			[this, client, playerId, message](const boost::system::error_code& error, std::size_t bytes) {
+				if (error) {
+					Logger::error("Erro ao enviar UDP {}", error.message());
+
+					if (error == boost::asio::error::connection_refused) {
+						removeClient(std::make_shared<int>(playerId));
+					}
 				}
-				Logger::info("Cliente removido da lista de conexoes UDP: {}:{}", remote_endpoint.address().to_string(), remote_endpoint.port());
 			}
-		}
-
-		startReceive();
-	}
-	catch (const std::exception& e) {
-		Logger::error("Erro ao parsear json: {}", e.what());
+		);
 	}
 }
 
-void UdpServer::broadcastMessage(const std::string& message) {
-	std::vector<boost::asio::ip::udp::endpoint> clientsToRemove;
-	std::vector<boost::asio::ip::udp::endpoint> clients(connectedClients.begin(), connectedClients.end());
+void UdpServer::removeClient(std::shared_ptr<int> playerId) {
 
-	for (const auto& client : clients) {
-		boost::system::error_code error;
-		socket.send_to(boost::asio::buffer(message), client, 0, error);
-
-		if (error) {
-			Logger::error("Erro ao enviar pacote UDP para {}:{} - {}",
-				client.address().to_string(), client.port(), error.message());
-
-			if (error == boost::asio::error::connection_refused) {
-				clientsToRemove.push_back(client); // ✅ Agora está seguro remover diretamente
-				Logger::info("Cliente removido da lista de conexões UDP: {}:{}",
-					client.address().to_string(), client.port());
+	if (isPlayerConnected(*playerId)) {
+		auto connection = playersEndpoints[*playerId];
+		io_context.post([this, connection, playerId]() {
+			auto it = playersConnections.find(connection);
+			if (it != playersConnections.end()) {
+				playersConnections.erase(connection);
+				playersEndpoints.erase(*playerId);
 			}
-		}
-	}
-
-
-	for (const auto& client : clientsToRemove) {
-		connectedClients.erase(client);
-		Logger::info("Cliente removido da lista de conexoes UDP: {}:{}", client.address().to_string(), client.port());
+			gameServer.removePlayer(*playerId);
+		});
 	}
 }
 
-void UdpServer::removeClient(int playerId) {
-	auto it = playersEndpoints.find(playerId);
-	if (it != playersEndpoints.end()) {
-		connectedClients.erase(it->second);
-		players.erase(it->second);
-		playersEndpoints.erase(it);
+void UdpServer::addConnection(int playerId, boost::asio::ip::udp::endpoint connection) {
+	if (isPlayerConnected(playerId)) {
+		Logger::debug("Cliente já registrado - ID: {}", playerId);
+		return;
 	}
-	gameServer.removePlayer(playerId);
+
+	Logger::info("Registrando novo cliente UDP - ID: {}", playerId);
+	playersConnections[remote_endpoint] = playerId;
+	playersEndpoints[playerId] = remote_endpoint;
+}
+
+bool UdpServer::isPlayerConnected(int playerId)
+{
+	return (playersEndpoints.find(playerId) != playersEndpoints.end());
 }

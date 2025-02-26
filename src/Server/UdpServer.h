@@ -12,22 +12,24 @@ class UdpServer {
 public:
 	UdpServer(boost::asio::io_context& io_context, int port, GameServer& gameServer);
 	int getPort() const { return port; }
-	void broadcastMessage(const std::string& message);
-	void removeClient(int playerId);
+	void broadcastMessage(std::shared_ptr<std::string> message);
+	void removeClient(std::shared_ptr<int> playerId);
+	bool isPlayerConnected(int playerId);
+	void addConnection(int playerId, boost::asio::ip::udp::endpoint);
 
 private:
 	void startReceive();
 	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred);
-	void broadcastGameState();
 
+	int port;
 
 	udp::socket socket;
 	udp::endpoint remote_endpoint;
+
 	std::array<char, 1024> recv_buffer;
-	std::set<boost::asio::ip::udp::endpoint> connectedClients;
-	std::unordered_map<boost::asio::ip::udp::endpoint, int> players;
+	boost::asio::io_context& io_context;
+	std::unordered_map<boost::asio::ip::udp::endpoint, int> playersConnections;
 	std::unordered_map<int, boost::asio::ip::udp::endpoint> playersEndpoints;
-	int port;
 
 	GameServer& gameServer;
 };

@@ -26,7 +26,7 @@ add_executable(GameServer
     src/main.cpp
     src/Game/GameState.h src/Game/GameState.cpp
     src/Game/MovementHandler.h src/Game/MovementHandler.cpp
-    src/Server/ClientUdpMessage.h src/Server/ClientUdpMessage.cpp
+     
     src/Server/MessageType.h "src/Game/Food.h" "src/Game/Food.cpp" "src/Game/FoodController.h" "src/Game/FoodController.cpp" "src/Game/MapController.h" "src/Game/MapController.cpp")
 
 # Adiciona diretórios de includes
