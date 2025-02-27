@@ -3,6 +3,6 @@
 class MapController {
 public:
 	MapController();
-	float generateRandomPosition();
+	float generateRandomPosition(float itemSize);
 private:
 };

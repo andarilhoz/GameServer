@@ -49,7 +49,7 @@ bool GameState::isPlayerAdded(int playerId) {
 	return players.find(playerId) != players.end();
 }
 
-std::unordered_map<int, Food> GameState::getFoodList() {
+std::unordered_map<int, Food>& GameState::getFoodList() {
 	return foodList;
 }
 
@@ -71,7 +71,12 @@ float GameState::getDeltaTime() {
 	return delta;
 }
 
-void GameState::spawnFood(int foodId, float x, float y) {
+Food GameState::spawnFood(int foodId, float x, float y) {
 	Food food = Food(foodId, x, y);
 	foodList[foodId] = food;
+	return food;
+}
+
+void GameState::removeFood(int foodId) {
+	foodList.erase(foodId);
 }

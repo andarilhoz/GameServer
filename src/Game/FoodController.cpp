@@ -1,38 +1,35 @@
 #include "FoodController.h"
 
-
-#include <random>
 #include <nlohmann/json.hpp>
 
+#include "../Utils/Logger.h"
+#include <vector>
 
-const int GRID_CELL_SIZE = 32;
+const int GRID_CELL_SIZE = 64;
 const int FOOD_SIZE = 16;
 const int FOOD_COUNT = 50;
 
 static constexpr float MAP_SIZE = 5000.0f;
 
 
-FoodController::FoodController(int initialFood, GameState gameState) : initialFood(initialFood), gameState(gameState) {};
+FoodController::FoodController(int initialFood, GameState& gameState, MapController mapController) : initialFood(initialFood), gameState(gameState), mapController(mapController) {};
 
-void FoodController::generateFood(int foodAmount) {
+std::vector<Food> FoodController::generateFood(int foodAmount) {
+    
+    std::vector<Food> generatedFood;
 
     while (gameState.getFoodList().size() < foodAmount) {
-        float x = generateRandomPosition();
-        float y = generateRandomPosition();
+        float x = mapController.generateRandomPosition(FOOD_SIZE);
+        float y = mapController.generateRandomPosition(FOOD_SIZE);
 
         if (isValidFoodPosition(x, y)) {
             int foodId = generateFoodId();
-            gameState.spawnFood(foodId, x, y);
+            Food foodGenerated = gameState.spawnFood(foodId, x, y);
+            generatedFood.push_back(foodGenerated);
+            addFood(foodId, x, y);
         }
     }
-}
-
-
-float FoodController::generateRandomPosition() {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(FOOD_SIZE, MAP_SIZE - FOOD_SIZE);
-    return dist(gen);
+    return generatedFood;
 }
 
 int FoodController::generateFoodId() {
@@ -40,21 +37,6 @@ int FoodController::generateFoodId() {
     return nextFoodId++;
 }
 
-
-struct GridCell {
-    int x, y;
-    bool operator == (const GridCell& other) const {
-        return x == other.x && y == other.y;
-    }
-};
-
-namespace std {
-    template<> struct hash<GridCell> {
-        size_t operator()(const GridCell& cell) const {
-            return hash<int>()(cell.x) ^ hash<int>()(cell.y);
-        }
-    };
-}
 
 std::unordered_map<GridCell, std::vector<int>> foodGrid;
 
@@ -87,15 +69,78 @@ void FoodController::addFood(int foodId, float x, float y) {
 }
 
 nlohmann::json FoodController::getFoodInfo() {
-    nlohmann::json foodMessage;
+    nlohmann::json foodList = nlohmann::json::array();
 
     for (const auto& food : gameState.getFoodList()) {
-        foodMessage["foods"].push_back({
+        foodList.push_back({
             {"id", food.second.id},
             {"x", food.second.x},
             {"y", food.second.y}
             });
     }
 
-    return foodMessage;
+    return foodList;
+}
+
+int FoodController::checkFoodCollision(float playerX, float playerY, float playerRadius)
+{
+    float foodRadius = FOOD_SIZE;
+    std::vector<GridCell> cells = getAllCells(playerX, playerY, playerRadius);
+    for (auto cell : cells) {
+        for (int foodId : foodGrid[cell]) {
+            // Pega a struct/objeto da comida no gameState
+            const auto& food = gameState.getFood(foodId);
+
+            // Calcula a distância entre player e a comida
+            float dist = std::hypot(food.x - playerX, food.y - playerY);
+
+            // Se a distância for menor do que a soma dos raios, temos colisão
+            Logger::info("Radius: {}", playerRadius);
+            if (dist < (playerRadius + foodRadius)) {
+                return foodId; // Retorna o ID da comida colidida
+            }
+        }
+    }
+
+    // Se não encontrar colisão em nenhuma das células vizinhas, retorna -1
+    return -1;
+}
+
+void FoodController::removeFood(float foodId) {
+    const auto& food = gameState.getFood(foodId);
+    GridCell cell = getGridCell(food.x, food.y);
+    auto it = foodGrid.find(cell);
+    if (it != foodGrid.end()) {
+        auto& vec = it->second;
+        vec.erase(std::remove(vec.begin(), vec.end(), foodId), vec.end());
+    }
+    gameState.removeFood(foodId);
+    
+}
+
+
+std::vector<GridCell> FoodController::getAllCells(float playerX, float playerY, float playerRadius)
+{
+    // Calcula o bounding box do círculo do player
+    float left = playerX - playerRadius;
+    float right = playerX + playerRadius;
+    float top = playerY - playerRadius;
+    float bottom = playerY + playerRadius;
+
+    // Converte para coordenadas de grade (célula)
+    int minCellX = static_cast<int>(std::floor(left / GRID_CELL_SIZE));
+    int maxCellX = static_cast<int>(std::floor(right / GRID_CELL_SIZE));
+    int minCellY = static_cast<int>(std::floor(top / GRID_CELL_SIZE));
+    int maxCellY = static_cast<int>(std::floor(bottom / GRID_CELL_SIZE));
+
+    std::vector<GridCell> cells;
+    cells.reserve((maxCellX - minCellX + 1) * (maxCellY - minCellY + 1));
+
+    for (int cx = minCellX; cx <= maxCellX; ++cx) {
+        for (int cy = minCellY; cy <= maxCellY; ++cy) {
+            cells.push_back({ cx, cy });
+        }
+    }
+
+    return cells;
 }

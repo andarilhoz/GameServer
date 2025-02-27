@@ -25,12 +25,20 @@ void Player::setDirection(float newX, float newY) {
 	directionY = newY;
 }
 
-void Player::setSize(float newSize) {
-	size = newSize;
+void Player::increaseSize(float valueAdded) {
+	size += valueAdded;
 }
 
 void Player::kill() {
 	alive = false;
+}
+
+int Player::getPoints() {
+	return points;
+}
+
+void Player::addPoints(int receivedPoints) {
+	points += receivedPoints;
 }
 
 std::string Player::toJson() const {

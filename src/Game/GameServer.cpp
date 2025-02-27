@@ -8,13 +8,17 @@
 
 constexpr float DISCONECT_TIMEOUT = 25.0f;
 static constexpr std::chrono::milliseconds UPDATE_INTERVAL(50);
+constexpr float PLAYER_HALF_SIZE = 64.0f;
 
+const int MinFoodAvailable = 100;
+const int PLAYER_MAX_SIZE = 2240;
 
 GameServer::GameServer(int tcpPort, int udpPort)
     : tcpServer(io_context, tcpPort, *this),
     udpServer(io_context, udpPort, *this),
     movementHandler(gameState),
     mapController(),
+    foodController(50, gameState, mapController),
     running(true)
 {
     Logger::info("Initializing loop thread");
@@ -52,13 +56,15 @@ void GameServer::updateAllPlayers()
 {
     using namespace std::chrono;
 
-    //generateFood();
+    foodController.generateFood(100);
 
     while (running) {
         {
             updatePlayerPositionFromDirection();
             broadcastPlayersStatus();
             checkForDisconnectedPlayers();
+            checkForFoodCollisions();
+            spawnFood();
         }
 
         std::this_thread::sleep_for(UPDATE_INTERVAL);
@@ -95,9 +101,8 @@ std::string GameServer::getAllPlayersInfo()
             {"id",       id},
             {"nickname", player.getNickname()},
             {"x",        player.getX()},
-            {"y",        player.getY()},
-            {"size",     player.getSize()}
-            });
+            {"y",        player.getY()}
+        });
     }
 
     return playerData.dump();
@@ -139,6 +144,63 @@ void GameServer::checkForDisconnectedPlayers()
     }
 }
 
+void GameServer::checkForFoodCollisions() 
+{
+    auto& allPlayers = gameState.getAllPlayers();
+    for (auto& [id, player] : allPlayers) {
+        
+        int foodId = foodController.checkFoodCollision(player.getX(), player.getY(), player.getSize());
+        if (foodId < 0) {
+            continue;
+        }
+        else {
+            foodController.removeFood(foodId);
+
+            if (player.getSize() < PLAYER_MAX_SIZE) {
+                player.increaseSize(1);
+            }
+            
+            
+            player.addPoints(1);
+
+            Logger::info("Jogador {} comeu comida {}, tamanho: {}", player.getNickname(), foodId, player.getSize());
+            
+            json foodEatenMessage = {
+                {"type", "food_eaten"},
+                {"id", foodId},
+                {"playerId", player.getId()},
+            };
+
+            auto foodMessage = std::make_shared<std::string>(foodEatenMessage.dump());
+            tcpServer.broadcastMessage(foodMessage);
+        }
+    }
+}
+
+void GameServer::spawnFood() {
+    int foodAmount = gameState.getFoodList().size();
+    
+    if (foodAmount >= MinFoodAvailable) {
+        return;
+    }
+
+    std::vector<Food> newFoods = foodController.generateFood(MinFoodAvailable);
+    json foodGeneratedMessage = {
+        {"type", "food_spawn"}
+    };
+
+    for (auto& food : newFoods) {
+        foodGeneratedMessage["foods"].push_back({
+            {"id", food.id},
+            {"x", food.x},
+            {"y", food.y}
+        });
+    }
+
+    auto foodMessage = std::make_shared<std::string>(foodGeneratedMessage.dump());
+    tcpServer.broadcastMessage(foodMessage);
+}
+
 void GameServer::removePlayerFromGame(int playerId) {
     gameState.removePlayer(playerId);
     udpServer.removeClient(std::make_shared<int>(playerId));
@@ -162,18 +224,19 @@ void GameServer::processTcpMessage(std::string message, int playerId) {
 
 
         std::string nickname = request["nickname"];
-        float startX = mapController.generateRandomPosition();
-        float startY = mapController.generateRandomPosition();
+        float startX = mapController.generateRandomPosition(PLAYER_HALF_SIZE);
+        float startY = mapController.generateRandomPosition(PLAYER_HALF_SIZE);
         
-        Player newPlayer(playerId, nickname, startX, startY, 1 /*size*/, 0 /*direction*/);
+        Player newPlayer(playerId, nickname, startX, startY, 1, 0, 64);
         addPlayer(newPlayer);
         
         auto allPlayers = gameState.getAllPlayers();
 
-        // Prepara JSON de resposta
+
         json response = {
             {"type", "connect"},
-            {"id",  playerId}
+            {"id",  playerId},
+            {"foods", foodController.getFoodInfo()}
         };
 
         for (auto& [id, player] : allPlayers) {
@@ -182,11 +245,12 @@ void GameServer::processTcpMessage(std::string message, int playerId) {
                 {"nickname", player.getNickname()},
                 {"x",        player.getX()},
                 {"y",        player.getY()},
-                {"size",     player.getSize()}
-                });
+                {"size",     player.getSize()},
+                {"points",   player.getPoints()}
+            });
         }
 
-        // Envia de forma assíncrona
+
         auto responseMessage = std::make_shared<std::string>(response.dump());
         tcpServer.sendPlayerMessage(playerId, responseMessage);
 

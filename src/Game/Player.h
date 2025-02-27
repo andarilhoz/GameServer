@@ -19,13 +19,16 @@ public:
 
 	void setPosition(float newX, float newY);
 	void setDirection(float newX, float newY);
-	void setSize(float newSize);
+	void increaseSize(float valueAdded);
 	void kill();
+	int getPoints();
+	void addPoints(int points);
 
 	std::string toJson() const;
 
 private:
 	int id;
+	int points = 0;
 	std::string nickname;
 	float x, y;
 	float directionX, directionY;

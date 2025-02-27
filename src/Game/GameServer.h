@@ -4,13 +4,14 @@
 #include "../Server/TcpServer.h"
 #include "GameState.h"
 #include "MovementHandler.h"
-#include <boost/asio.hpp>
+#include "FoodController.h"
 #include "Player.h"
 #include "MapController.h"
 
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <boost/asio.hpp>
 
 class GameServer {
 public:
@@ -31,6 +32,8 @@ private:
 	void updatePlayerPositionFromDirection();
 	void broadcastPlayersStatus();
 	void checkForDisconnectedPlayers();
+	void checkForFoodCollisions();
+	void spawnFood();
 
 	std::string generateDisconnectPlayerMessage(int playerId);
 	std::string generateConnectedPlayerMessage(Player player);
@@ -39,6 +42,7 @@ private:
 	TcpServer tcpServer;
 	UdpServer udpServer;
 	GameState gameState;
+	FoodController foodController;
 	MovementHandler movementHandler;
 	MapController mapController;
 	std::atomic<bool> running = true;
