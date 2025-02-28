@@ -3,13 +3,8 @@
 #include <nlohmann/json.hpp>
 
 #include "../Utils/Logger.h"
+#include "../GameConfig.h"
 #include <vector>
-
-const int GRID_CELL_SIZE = 64;
-const int FOOD_SIZE = 16;
-const int FOOD_COUNT = 50;
-
-static constexpr float MAP_SIZE = 5000.0f;
 
 
 FoodController::FoodController(int initialFood, GameState& gameState, MapController mapController) : initialFood(initialFood), gameState(gameState), mapController(mapController) {};
@@ -19,8 +14,8 @@ std::vector<Food> FoodController::generateFood(int foodAmount) {
     std::vector<Food> generatedFood;
 
     while (gameState.getFoodList().size() < foodAmount) {
-        float x = mapController.generateRandomPosition(FOOD_SIZE);
-        float y = mapController.generateRandomPosition(FOOD_SIZE);
+        float x = mapController.generateRandomPosition(GameConfig::FOOD_SIZE);
+        float y = mapController.generateRandomPosition(GameConfig::FOOD_SIZE);
 
         if (isValidFoodPosition(x, y)) {
             int foodId = generateFoodId();
@@ -41,7 +36,7 @@ int FoodController::generateFoodId() {
 std::unordered_map<GridCell, std::vector<int>> foodGrid;
 
 GridCell getGridCell(float x, float y) {
-    return { int(x / GRID_CELL_SIZE), int(y / GRID_CELL_SIZE) };
+    return { int(x / GameConfig::GRID_CELL_SIZE), int(y / GameConfig::GRID_CELL_SIZE) };
 }
 
 bool FoodController::isValidFoodPosition(float x, float y) {
@@ -52,7 +47,7 @@ bool FoodController::isValidFoodPosition(float x, float y) {
             GridCell neightbor = { cell.x + dx, cell.y + dy };
             if (foodGrid.count(neightbor)) {
                 for (int foodId : foodGrid[neightbor]) {
-                    if (std::hypot(gameState.getFood(foodId).x - x, gameState.getFood(foodId).y - y) < FOOD_SIZE) {
+                    if (std::hypot(gameState.getFood(foodId).x - x, gameState.getFood(foodId).y - y) < GameConfig::FOOD_SIZE) {
                         return false;
                     }
                 }
@@ -84,7 +79,7 @@ nlohmann::json FoodController::getFoodInfo() {
 
 int FoodController::checkFoodCollision(float playerX, float playerY, float playerRadius)
 {
-    float foodRadius = FOOD_SIZE;
+    float foodRadius = GameConfig::FOOD_SIZE;
     std::vector<GridCell> cells = getAllCells(playerX, playerY, playerRadius);
     for (auto cell : cells) {
         for (int foodId : foodGrid[cell]) {
@@ -128,10 +123,10 @@ std::vector<GridCell> FoodController::getAllCells(float playerX, float playerY, 
     float bottom = playerY + playerRadius;
 
     // Converte para coordenadas de grade (célula)
-    int minCellX = static_cast<int>(std::floor(left / GRID_CELL_SIZE));
-    int maxCellX = static_cast<int>(std::floor(right / GRID_CELL_SIZE));
-    int minCellY = static_cast<int>(std::floor(top / GRID_CELL_SIZE));
-    int maxCellY = static_cast<int>(std::floor(bottom / GRID_CELL_SIZE));
+    int minCellX = static_cast<int>(std::floor(left / GameConfig::GRID_CELL_SIZE));
+    int maxCellX = static_cast<int>(std::floor(right / GameConfig::GRID_CELL_SIZE));
+    int minCellY = static_cast<int>(std::floor(top / GameConfig::GRID_CELL_SIZE));
+    int maxCellY = static_cast<int>(std::floor(bottom / GameConfig::GRID_CELL_SIZE));
 
     std::vector<GridCell> cells;
     cells.reserve((maxCellX - minCellX + 1) * (maxCellY - minCellY + 1));

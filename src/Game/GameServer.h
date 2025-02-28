@@ -18,10 +18,8 @@ public:
 	GameServer(int tcpPort, int updPort);
 	void run();
 	void addPlayer(Player player);
-	void removePlayer(int playerId);
 	void removePlayerFromGame(int playerId);
-	void updateAllPlayers();
-	bool isPlayerTcpConnected(int playerId);
+	void gameLoop();
 	std::string getAllPlayersInfo();
 
 	void processTcpMessage(std::string message, int playerId);

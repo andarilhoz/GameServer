@@ -64,7 +64,6 @@ void UdpServer::removeClient(std::shared_ptr<int> playerId) {
 				playersConnections.erase(connection);
 				playersEndpoints.erase(*playerId);
 			}
-			gameServer.removePlayer(*playerId);
 		});
 	}
 }

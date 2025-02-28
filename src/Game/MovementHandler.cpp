@@ -3,11 +3,8 @@
 #include <cmath>
 
 #include "../Utils/Logger.h"
+#include "../GameConfig.h"
 
-
-const float SPEED = 200;
-static constexpr float MAX_SPEED = 200.0f;
-static constexpr float MAP_SIZE = 5000.0f;
 
 MovementHandler::MovementHandler(GameState& gameState) : gameState(gameState) {}
 
@@ -33,12 +30,12 @@ void MovementHandler::updatePosition(Player& player, float deltaTime) {
         dy /= length;
     }
 
-    float newX = player.getX() + dx * MAX_SPEED * deltaTime;
-    float newY = player.getY() + dy * MAX_SPEED * deltaTime;
+    float newX = player.getX() + dx * GameConfig::MAX_SPEED * deltaTime;
+    float newY = player.getY() + dy * GameConfig::MAX_SPEED * deltaTime;
 
 
-    newX = std::clamp(newX, player.getSize(), MAP_SIZE - player.getSize());
-    newY = std::clamp(newY, player.getSize(), MAP_SIZE - player.getSize());
+    newX = std::clamp(newX, player.getSize(), GameConfig::MAP_SIZE - player.getSize());
+    newY = std::clamp(newY, player.getSize(), GameConfig::MAP_SIZE - player.getSize());
 
     player.setPosition(newX, newY);
 }

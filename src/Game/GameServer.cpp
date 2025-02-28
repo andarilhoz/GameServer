@@ -10,7 +10,7 @@ constexpr float DISCONECT_TIMEOUT = 25.0f;
 static constexpr std::chrono::milliseconds UPDATE_INTERVAL(50);
 constexpr float PLAYER_HALF_SIZE = 64.0f;
 
-const int MinFoodAvailable = 100;
+const int MinFoodAvailable = 5;
 const int PLAYER_MAX_SIZE = 2240;
 
 GameServer::GameServer(int tcpPort, int udpPort)
@@ -22,7 +22,7 @@ GameServer::GameServer(int tcpPort, int udpPort)
     running(true)
 {
     Logger::info("Initializing loop thread");
-    updateThread = std::thread(&GameServer::updateAllPlayers, this);
+    updateThread = std::thread(&GameServer::gameLoop, this);
 }
 
 void GameServer::run()
@@ -32,27 +32,7 @@ void GameServer::run()
     io_context.run();
 }
 
-
-void GameServer::addPlayer(Player player)
-{
-    auto connectedMessage = std::make_shared<std::string>(generateConnectedPlayerMessage(player));
-    Logger::info("New player connected: {}", player.getNickname());
-    tcpServer.broadcastMessage(connectedMessage);
-    gameState.addPlayer(player);
-}
-
-void GameServer::removePlayer(int playerId)
-{
-    gameState.removePlayer(playerId);
-}
-
-bool GameServer::isPlayerTcpConnected(int playerId)
-{
-    return tcpServer.isPlayerConnected(playerId);
-}
-
-
-void GameServer::updateAllPlayers()
+void GameServer::gameLoop()
 {
     using namespace std::chrono;
 
@@ -72,6 +52,27 @@ void GameServer::updateAllPlayers()
 }
 
 
+// PlayersControllers
+void GameServer::addPlayer(Player player)
+{
+    auto connectedMessage = std::make_shared<std::string>(generateConnectedPlayerMessage(player));
+    Logger::info("New player connected: {}", player.getNickname());
+    tcpServer.broadcastMessage(connectedMessage);
+    gameState.addPlayer(player);
+}
+
+void GameServer::removePlayerFromGame(int playerId) {
+    gameState.removePlayer(playerId);
+    udpServer.removeClient(std::make_shared<int>(playerId));
+    tcpServer.disconectPlayer(playerId);
+
+    auto disconnectMessage = std::make_shared<std::string>(generateDisconnectPlayerMessage(playerId));
+    tcpServer.broadcastMessage(disconnectMessage);
+}
+
+
+// LoopActions
+
 void GameServer::updatePlayerPositionFromDirection()
 {
     float deltaTime = gameState.getDeltaTime();
@@ -83,49 +84,10 @@ void GameServer::updatePlayerPositionFromDirection()
     }
 }
 
-
 void GameServer::broadcastPlayersStatus()
 {
     std::string message = getAllPlayersInfo();
     udpServer.broadcastMessage(std::make_shared<std::string>(message));
-}
-
-
-std::string GameServer::getAllPlayersInfo()
-{
-    json playerData;
-    auto allPlayers = gameState.getAllPlayers();
-
-    for (auto& [id, player] : allPlayers) {
-        playerData["players"].push_back({
-            {"id",       id},
-            {"nickname", player.getNickname()},
-            {"x",        player.getX()},
-            {"y",        player.getY()}
-        });
-    }
-
-    return playerData.dump();
-}
-
-std::string GameServer::generateDisconnectPlayerMessage(int playerId) {
-    json disconnectMsg = {
-        {"type", "player_disconnect"},
-        {"id", playerId}
-    };
-    return disconnectMsg.dump();
-}
-
-std::string GameServer::generateConnectedPlayerMessage(Player player) {
-    json connectedMsg = {
-        {"type", "player_connect"},
-        {"id", player.getId()},
-        {"x", player.getX()},
-        {"y", player.getY()},
-        {"nickname", player.getNickname()},
-    };
-
-    return connectedMsg.dump();
 }
 
 void GameServer::checkForDisconnectedPlayers()
@@ -201,15 +163,9 @@ void GameServer::spawnFood() {
     tcpServer.broadcastMessage(foodMessage);
 }
 
-void GameServer::removePlayerFromGame(int playerId) {
-    gameState.removePlayer(playerId);
-    udpServer.removeClient(std::make_shared<int>(playerId));
-    tcpServer.disconectPlayer(playerId);
 
-    auto disconnectMessage = std::make_shared<std::string>(generateDisconnectPlayerMessage(playerId));
-    tcpServer.broadcastMessage(disconnectMessage);
-}
 
+// Observables / EventListeners
 void GameServer::processTcpMessage(std::string message, int playerId) {
     try {
         if (gameState.isPlayerAdded(playerId))
@@ -269,11 +225,50 @@ void GameServer::processUdpMessage(std::shared_ptr<std::string> message, boost::
     float x = parsedData["x"];
     float y = parsedData["y"];
 
-    if (!isPlayerTcpConnected(playerId)) {
+    if (!tcpServer.isPlayerConnected(playerId)) {
         return;
     }
 
     movementHandler.handleDirectionChange(playerId, x, y);
 
     udpServer.addConnection(playerId, connection);
+}
+
+
+// Messages
+std::string GameServer::getAllPlayersInfo()
+{
+    json playerData;
+    auto allPlayers = gameState.getAllPlayers();
+
+    for (auto& [id, player] : allPlayers) {
+        playerData["players"].push_back({
+            {"id",       id},
+            {"nickname", player.getNickname()},
+            {"x",        player.getX()},
+            {"y",        player.getY()}
+            });
+    }
+
+    return playerData.dump();
+}
+
+std::string GameServer::generateDisconnectPlayerMessage(int playerId) {
+    json disconnectMsg = {
+        {"type", "player_disconnect"},
+        {"id", playerId}
+    };
+    return disconnectMsg.dump();
+}
+
+std::string GameServer::generateConnectedPlayerMessage(Player player) {
+    json connectedMsg = {
+        {"type", "player_connect"},
+        {"id", player.getId()},
+        {"x", player.getX()},
+        {"y", player.getY()},
+        {"nickname", player.getNickname()},
+    };
+
+    return connectedMsg.dump();
 }
