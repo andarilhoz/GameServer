@@ -27,7 +27,7 @@ public:
     std::vector<boost::asio::ip::udp::endpoint> getAllUdpConnections();
 
     void sendTcpMessage(int playerId, const GameMessage& message);
-    void sendUdpMessage(int playerId, const std::string& message);
+    void sendUdpMessage(int playerId, const GameMessage& message);
 
     void broadcastTcpMessage(const GameMessage& message);
     void broadcastUdpMessage(const GameMessage& message);

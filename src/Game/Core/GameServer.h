@@ -26,7 +26,8 @@ public:
 
 private:
 	void playerDisconnected(boost::asio::ip::udp::endpoint connection);
-	
+	void handleMovementCall(json parsedData, udp::endpoint connection);
+
 	GameState gameState;
 	GameLoop gameLoop;
 	FoodController foodController;

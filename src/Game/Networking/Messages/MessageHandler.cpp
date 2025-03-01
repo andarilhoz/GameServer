@@ -98,3 +98,11 @@ GameMessage MessageHandler::serializeNewPlayer(Player player) {
     };
     return GameMessage::fromJson(connectedMsg);
 }
+
+GameMessage MessageHandler::serializePong(uint64_t timestamp) {
+    json pongMessage = {
+        {"type", "pong"},
+        {"timestamp", timestamp}
+    };
+    return GameMessage::fromJson(pongMessage);
+}

@@ -90,8 +90,27 @@ void GameServer::processTcpMessage(std::string message, std::shared_ptr<boost::a
     }
 }
 
-void GameServer::processUdpMessage(std::shared_ptr<std::string> message, boost::asio::ip::udp::endpoint connection) {
+void GameServer::processUdpMessage(std::shared_ptr<std::string> message, udp::endpoint connection) {
     json parsedData = json::parse(*message);
+
+    std::string type = parsedData["type"];
+
+    if (type == "move") {
+        Logger::info("Move recebido de jogador");
+        handleMovementCall(parsedData, connection);
+    }
+    if (type == "ping") {
+        uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count();
+        GameMessage pongMessage = MessageHandler::serializePong(timestamp);
+        int playerId = connectionManager.getPlayerIdByUdpConnection(connection);
+        Logger::info("Ping recebido de jogador: {} mandando pong", playerId);
+        connectionManager.sendUdpMessage(playerId, pongMessage);
+    }
+}
+
+void GameServer::handleMovementCall(json parsedData, udp::endpoint connection) {
 
     int playerId = parsedData["playerId"];
     float x = parsedData["x"];

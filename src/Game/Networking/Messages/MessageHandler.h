@@ -11,5 +11,6 @@ public:
 	static GameMessage serializeFoodSpawn(std::vector<Food> newFoods);
 	static GameMessage serializeGameStateData(int playerId, GameState& gameState);
 	static GameMessage serializeNewPlayer(Player player);
+	static GameMessage serializePong(uint64_t timestamp);
 private:
 };

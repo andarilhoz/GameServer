@@ -81,10 +81,10 @@ void ConnectionManager::sendTcpMessage(int playerId, const GameMessage& message)
     }
 }
 
-void ConnectionManager::sendUdpMessage(int playerId, const std::string& message) {
+void ConnectionManager::sendUdpMessage(int playerId, const GameMessage& message) {
     if (udpConnections.count(playerId)) {
         auto connection = udpConnections[playerId];
-        auto messageShared = std::make_shared<std::string>(message);
+        auto messageShared = std::make_shared<std::string>(message.getRawData());
         udpServer.sendMessage(connection, messageShared, 
             [this, playerId](boost::asio::ip::udp::endpoint connection) {
                 //removePlayer(playerId);
@@ -103,7 +103,7 @@ void ConnectionManager::broadcastTcpMessage(const GameMessage& message) {
 
 void ConnectionManager::broadcastUdpMessage(const GameMessage& message) {
     for (const auto& [playerId, endpoint] : udpConnections) {
-        sendUdpMessage(playerId, message.getRawData());
+        sendUdpMessage(playerId, message);
     }
 }
 

@@ -30,7 +30,7 @@ void GameLoop::update() {
 			checkFoodCollision(player);
 		}
 
-		connectionManager.broadcastUdpMessage(MessageHandler::serializePlayersStatus(allPlayers));
+		//connectionManager.broadcastUdpMessage(MessageHandler::serializePlayersStatus(allPlayers));
 		removeInactivePlayers(playersToRemove);
 		std::this_thread::sleep_for(UPDATE_INTERVAL);
 	}
