@@ -100,10 +100,7 @@ void GameServer::processUdpMessage(std::shared_ptr<std::string> message, udp::en
         handleMovementCall(parsedData, connection);
     }
     if (type == "ping") {
-        uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
-        ).count();
-        GameMessage pongMessage = MessageHandler::serializePong(timestamp);
+        GameMessage pongMessage = MessageHandler::serializePong(parsedData["timestamp"]);
         int playerId = connectionManager.getPlayerIdByUdpConnection(connection);
         Logger::info("Ping recebido de jogador: {} mandando pong", playerId);
         connectionManager.sendUdpMessage(playerId, pongMessage);
