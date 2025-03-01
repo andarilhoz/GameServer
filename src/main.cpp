@@ -1,10 +1,8 @@
 #include <iostream>
 
-#include "Game/GameServer.h"
+#include "Game/Core/GameServer.h"
 #include "Utils/Logger.h"
 
-const int TCP_PORT = 5555;
-const int UDP_PORT = 7777;
 
 int main()
 {
@@ -13,7 +11,7 @@ int main()
     Logger::info("Main initializing");
 
     try {
-        GameServer server(TCP_PORT, UDP_PORT);
+        GameServer server;
         server.run();
     }
     catch (std::exception& e) {

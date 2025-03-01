@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameState.h"
+#include "../Core/GameState.h"
 #include <string>
 #include <nlohmann/json.hpp>
 

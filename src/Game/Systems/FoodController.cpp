@@ -2,12 +2,12 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../Utils/Logger.h"
-#include "../GameConfig.h"
+#include "../../Utils/Logger.h"
+#include "../Config/GameConfig.h"
 #include <vector>
 
 
-FoodController::FoodController(int initialFood, GameState& gameState, MapController mapController) : initialFood(initialFood), gameState(gameState), mapController(mapController) {};
+FoodController::FoodController(GameState& gameState, MapController& mapController) : gameState(gameState), mapController(mapController) {};
 
 std::vector<Food> FoodController::generateFood(int foodAmount) {
     
@@ -61,20 +61,6 @@ void FoodController::addFood(int foodId, float x, float y) {
     gameState.spawnFood(foodId, x, y);
     GridCell cell = getGridCell(x, y);
     foodGrid[cell].push_back(foodId);
-}
-
-nlohmann::json FoodController::getFoodInfo() {
-    nlohmann::json foodList = nlohmann::json::array();
-
-    for (const auto& food : gameState.getFoodList()) {
-        foodList.push_back({
-            {"id", food.second.id},
-            {"x", food.second.x},
-            {"y", food.second.y}
-            });
-    }
-
-    return foodList;
 }
 
 int FoodController::checkFoodCollision(float playerX, float playerY, float playerRadius)

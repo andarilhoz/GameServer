@@ -18,16 +18,16 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 
 # Cria o executável do servidor
 add_executable(GameServer 
-    src/Game/Player.h src/Game/Player.cpp
-    src/Server/UdpServer.h src/Server/UdpServer.cpp
-    src/Utils/Logger.h src/Utils/Logger.cpp
-    "src/Game/GameServer.h" "src/Game/GameServer.cpp"
-    src/Server/TcpServer.h src/Server/TcpServer.cpp
+    "src/Game/Entities/Player.h" "src/Game/Entities/Player.cpp"
+    "src/Game/Networking/UdpServer.h" "src/Game/Networking/UdpServer.cpp"
+    "src/Utils/Logger.h" "src/Utils/Logger.cpp"
+    "src/Game/Core/GameServer.h" "src/Game/Core/GameServer.cpp"
+    "src/Game/Networking/TcpServer.h" "src/Game/Networking/TcpServer.cpp"
     src/main.cpp
-    src/Game/GameState.h src/Game/GameState.cpp
-    src/Game/MovementHandler.h src/Game/MovementHandler.cpp
+    "src/Game/Core/GameState.h" "src/Game/Core/GameState.cpp"
+    "src/Game/Systems/MovementHandler.h" "src/Game/Systems/MovementHandler.cpp"
      
-     "src/Game/Food.h" "src/Game/Food.cpp" "src/Game/FoodController.h" "src/Game/FoodController.cpp" "src/Game/MapController.h" "src/Game/MapController.cpp" "src/Game/GridCell.cpp" "src/GameConfig.h")
+     "src/Game/Entities/Food.h" "src/Game/Entities/Food.cpp" "src/Game/Systems/FoodController.h" "src/Game/Systems/FoodController.cpp" "src/Game/Systems/MapController.h" "src/Game/Systems/MapController.cpp" "src/Game/Entities/GridCell.cpp" "src/Game/Config/GameConfig.h" "src/Game/Core/GameLoop.h" "src/Game/Core/GameLoop.cpp" "src/Game/Systems/PlayerSystem.h" "src/Game/Systems/PlayerSystem.cpp" "src/Game/Networking/ConnectionManager.h" "src/Game/Networking/ConnectionManager.cpp" "src/Game/Networking/Messages/MessageHandler.h" "src/Game/Networking/Messages/GameMessage.h" "src/Game/Networking/Messages/GameMessage.cpp" "src/Game/Networking/Messages/MessageHandler.cpp")
 
 # Adiciona diretórios de includes
 target_include_directories(GameServer PRIVATE ${Boost_INCLUDE_DIRS})

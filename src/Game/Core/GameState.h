@@ -1,8 +1,8 @@
 #pragma once
 
 #include <unordered_map>
-#include "Player.h"
-#include "Food.h"
+#include "../Entities/Player.h"
+#include "../Entities/Food.h"
 #include <chrono>
 #include <set>
 
@@ -18,7 +18,7 @@ public:
 	std::unordered_map<int, Food>& getFoodList();
 	Food getFood(int foodId);
 	Player& getPlayer(int playerId);
-	bool isPlayerInactive(int playerId, float timeoutSeconds);
+	bool isPlayerInactive(int playerId);
 	bool isPlayerAdded(int playerId);
 	std::unordered_map<int, Player>& getAllPlayers();
 

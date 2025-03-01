@@ -1,5 +1,7 @@
 #include "GameState.h"
-#include "../Utils/Logger.h"
+#include "../../Utils/Logger.h"
+
+constexpr float DISCONECT_TIMEOUT = 25.0f;
 
 void GameState::addPlayer(Player player) {
 	Logger::info("Adicionando player: {}", player.getNickname());
@@ -32,13 +34,13 @@ void GameState::updatePlayerDirection(int playerId, float x, float y) {
 	Logger::debug("Jogador {}, com direcao para ({},{})", playerId, x, y);
 }
 
-bool GameState::isPlayerInactive(int playerId, float timeoutSeconds) {
+bool GameState::isPlayerInactive(int playerId) {
 	using namespace std::chrono;
 
 	if (lastActivity.find(playerId) == lastActivity.end()) return true;
 
 	float elapsed = duration<float>(steady_clock::now() - lastActivity[playerId]).count();
-	return elapsed > timeoutSeconds;
+	return elapsed > DISCONECT_TIMEOUT;
 }
 
 Player& GameState::getPlayer(int playerId) {

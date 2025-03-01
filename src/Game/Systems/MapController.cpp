@@ -1,6 +1,6 @@
 #include "MapController.h"
 
-#include "../GameConfig.h"
+#include "../Config/GameConfig.h"
 #include <random>
 
 MapController::MapController() {};

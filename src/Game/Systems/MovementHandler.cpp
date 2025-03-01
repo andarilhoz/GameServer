@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-#include "../Utils/Logger.h"
-#include "../GameConfig.h"
+#include "../../Utils/Logger.h"
+#include "../Config/GameConfig.h"
 
 
 MovementHandler::MovementHandler(GameState& gameState) : gameState(gameState) {}
