@@ -1,6 +1,7 @@
 ﻿#include "UdpServer.h"
 #include <iostream>
 #include "../../Utils/Logger.h"
+#include "../../Utils/Time.h"
 #include <nlohmann/json.hpp>
 #include "../Core/GameServer.h"
 
@@ -19,6 +20,9 @@ void UdpServer::startReceive() {
 void UdpServer::handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred) {
 
 	if (!error) {
+
+		Time::setInitialTimestamp();
+
 		auto data = std::make_shared<std::string>(recv_buffer.data(), bytes_transferred);
 		if (observable != nullptr) {
 			observable(data, remote_endpoint);

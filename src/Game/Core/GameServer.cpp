@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include "../../Utils/Logger.h"
+#include "../../Utils/Time.h"
 
 #include "../Networking/Messages/MessageHandler.h"
 
@@ -100,10 +101,15 @@ void GameServer::processUdpMessage(std::shared_ptr<std::string> message, udp::en
         handleMovementCall(parsedData, connection);
     }
     if (type == "ping") {
-        GameMessage pongMessage = MessageHandler::serializePong(parsedData["timestamp"]);
-        int playerId = connectionManager.getPlayerIdByUdpConnection(connection);
-        Logger::info("Ping recebido de jogador: {} mandando pong", playerId);
-        connectionManager.sendUdpMessage(playerId, pongMessage);
+        auto timestamp = parsedData["timestamp"];
+        auto initial_timestamp = Time::getSetedTimestamp();
+
+        Logger::info("📡 Enviando Pong | Tempo de resposta do servidor: {}ms", initial_timestamp - Time::getEpochTimeMillisUTC());
+
+        Logger::info("📡 Ping recebido Timestamp: {}", timestamp);
+
+        GameMessage pongMessage = MessageHandler::serializePong(timestamp);
+        connectionManager.sendUdpMessage(connection, pongMessage);
     }
 }
 

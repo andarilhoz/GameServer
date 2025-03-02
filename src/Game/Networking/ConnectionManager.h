@@ -28,6 +28,8 @@ public:
 
     void sendTcpMessage(int playerId, const GameMessage& message);
     void sendUdpMessage(int playerId, const GameMessage& message);
+    
+    void sendUdpMessage(udp::endpoint connection, const GameMessage& message);
 
     void broadcastTcpMessage(const GameMessage& message);
     void broadcastUdpMessage(const GameMessage& message);
