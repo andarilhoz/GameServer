@@ -1,7 +1,7 @@
 #include "CollisionSystem.h"
 
 #include "../../Utils/Logger.h"
-
+#include <cmath>
 
 CollisionSystem::CollisionSystem(GameState& gameState) : gameState(gameState) {}
 
