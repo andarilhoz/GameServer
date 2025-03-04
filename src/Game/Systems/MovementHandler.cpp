@@ -37,5 +37,9 @@ void MovementHandler::updatePosition(Player& player, float deltaTime) {
     newX = std::clamp(newX, player.getSize(), GameConfig::MAP_SIZE - player.getSize());
     newY = std::clamp(newY, player.getSize(), GameConfig::MAP_SIZE - player.getSize());
 
+    float clampedX = std::max(player.getSize(), std::min(newX, GameConfig::MAP_SIZE - player.getSize()));
+    float clampedY = std::max(player.getSize(), std::min(newY, GameConfig::MAP_SIZE - player.getSize()));
+
+
     player.setPosition(newX, newY);
 }

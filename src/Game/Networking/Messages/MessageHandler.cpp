@@ -5,9 +5,14 @@
 using nlohmann::json;
 
 GameMessage MessageHandler::serializePlayersStatus(std::unordered_map<int, Player> players) {
-    json playerData;
+    json playerData = {
+        {"type", "update"}
+    };
 
     for (auto& [id, player] : players) {
+        if (!player.isAlive()) {
+            continue;
+        }
         playerData["players"].push_back({
             {"id",       id},
             {"nickname", player.getNickname()},
@@ -105,4 +110,15 @@ GameMessage MessageHandler::serializePong(uint64_t timestamp) {
         {"timestamp", timestamp}
     };
     return GameMessage::fromJson(pongMessage);
+}
+
+
+GameMessage MessageHandler::killPlayer(Player assassin, Player victim) {
+    json killMessage = {
+        {"type", "kill"},
+        {"assassin", assassin.getId()},
+        {"victim", victim.getId()},
+        {"victimSize", victim.getSize()}
+    };
+    return GameMessage::fromJson(killMessage);
 }

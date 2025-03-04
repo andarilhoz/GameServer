@@ -8,6 +8,7 @@
 #include "../Entities/Player.h"
 #include "../Systems/MapController.h"
 #include "../Systems/PlayerSystem.h"
+#include "../Systems/CollisionSystem.h"
 #include "../Networking/ConnectionManager.h"
 #include "GameLoop.h"
 
@@ -32,6 +33,7 @@ private:
 	GameLoop gameLoop;
 	FoodController foodController;
 	PlayerSystem playerSystem;
+	CollisionSystem collisionSystem;
 	ConnectionManager connectionManager;
 	MovementHandler movementHandler;
 	MapController mapController;

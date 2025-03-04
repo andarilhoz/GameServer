@@ -18,7 +18,8 @@ GameServer::GameServer() :
     movementHandler(gameState),
     playerSystem(gameState),
     foodController(gameState, mapController),
-    gameLoop(gameState, movementHandler, playerSystem, connectionManager, foodController)
+    collisionSystem(gameState),
+    gameLoop(gameState, movementHandler, playerSystem, connectionManager, foodController, collisionSystem)
 {
     connectionManager.subscribeTcpMessage(
         [this](std::string message, std::shared_ptr<tcp::socket> socket) { 
@@ -97,16 +98,10 @@ void GameServer::processUdpMessage(std::shared_ptr<std::string> message, udp::en
     std::string type = parsedData["type"];
 
     if (type == "move") {
-        Logger::info("Move recebido de jogador");
         handleMovementCall(parsedData, connection);
     }
     if (type == "ping") {
         auto timestamp = parsedData["timestamp"];
-        auto initial_timestamp = Time::getSetedTimestamp();
-
-        Logger::info("📡 Enviando Pong | Tempo de resposta do servidor: {}ms", initial_timestamp - Time::getEpochTimeMillisUTC());
-
-        Logger::info("📡 Ping recebido Timestamp: {}", timestamp);
 
         GameMessage pongMessage = MessageHandler::serializePong(timestamp);
         connectionManager.sendUdpMessage(connection, pongMessage);

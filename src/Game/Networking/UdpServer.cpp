@@ -20,9 +20,6 @@ void UdpServer::startReceive() {
 void UdpServer::handle_receive(const boost::system::error_code& error, std::size_t bytes_transferred) {
 
 	if (!error) {
-
-		Time::setInitialTimestamp();
-
 		auto data = std::make_shared<std::string>(recv_buffer.data(), bytes_transferred);
 		if (observable != nullptr) {
 			observable(data, remote_endpoint);

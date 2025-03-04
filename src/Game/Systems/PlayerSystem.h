@@ -11,6 +11,7 @@ public:
 	Player& getPlayer(int playerId);
 
 	void eatFood(Player& playerId);
+	void eatPlayer(Player& player, int victimSize);
 private:
 	GameState& gameState;
 	int nextPlayerId = 1;

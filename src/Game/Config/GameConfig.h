@@ -3,7 +3,7 @@
 #include "../Networking/Messages/GameMessage.h"
 
 namespace GameConfig {
-	constexpr int MAP_SIZE = 2000;
+	constexpr float MAP_SIZE = 2000;
 
 	constexpr int GRID_CELL_SIZE = 64;
 	constexpr int FOOD_SIZE = 16;
