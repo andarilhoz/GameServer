@@ -1,5 +1,6 @@
 #include "Player.h"
 #include <sstream>
+#include "../Config/GameConfig.h"
 
 Player::Player() : id(-1), x(0.0f), y(0.0f), directionX(200), directionY(0), alive(false), size(1) {};
 
@@ -26,6 +27,10 @@ void Player::setDirection(float newX, float newY) {
 }
 
 void Player::increaseSize(float valueAdded) {
+    if(size + valueAdded > GameConfig::PLAYER_MAX_SIZE){
+        size = GameConfig::PLAYER_MAX_SIZE;
+        return;
+    }
 	size += valueAdded;
 }
 
@@ -35,6 +40,14 @@ void Player::kill() {
 
 int Player::getPoints() {
 	return points;
+}
+
+void Player::setPoints(int newPoints){
+    points = newPoints;
+}
+
+void Player::setSize(int newSize){
+    size = newSize;
 }
 
 void Player::addPoints(int receivedPoints) {
@@ -49,4 +62,22 @@ std::string Player::toJson() const {
 		<< ", \"size\": " << size
 		<< ", \"alive\": " << (alive ? "true" : "false") << " }";
 	return ss.str();
+}
+
+void Player::setRespawnTimer(float respawnTime) {
+    respawn_timer = respawnTime;
+}
+
+float Player::getRespawnTime() {
+    return respawn_timer;
+}
+
+void Player::updateRespawnTime(float delta){
+    respawn_timer -= delta;
+}
+
+void Player::respawn(std::pair<float, float> respawnPosition) {
+    alive = true;
+    x = respawnPosition.first;
+    y = respawnPosition.second;
 }

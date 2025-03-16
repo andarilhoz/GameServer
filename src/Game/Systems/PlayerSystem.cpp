@@ -3,14 +3,12 @@
 #include "../Config/GameConfig.h"
 #include "../../Utils/Logger.h"
 
-const int PLAYER_MAX_SIZE = 2240;
-
-PlayerSystem::PlayerSystem(GameState& state) : gameState(state) {}
+PlayerSystem::PlayerSystem(GameState &state, CollisionSystem &collisionSystem)
+        : gameState(state), collisionSystem(collisionSystem) {}
 
 
 Player PlayerSystem::addPlayer(const std::string& nickname) {
-    float startX = rand() % int(GameConfig::MAP_SIZE);
-    float startY = rand() % int(GameConfig::MAP_SIZE);
+    auto [startX, startY] = collisionSystem.getRandomSafePositionForSpawn();
 
     Player newPlayer(nextPlayerId, nickname, startX, startY, 0, 0, 64);
     gameState.addPlayer(newPlayer);
@@ -28,7 +26,7 @@ Player& PlayerSystem::getPlayer(int playerId) {
 }
 
 void PlayerSystem::eatFood(Player& player) {
-    if (player.getSize() < PLAYER_MAX_SIZE) {
+    if (player.getSize() < GameConfig::PLAYER_MAX_SIZE) {
         player.increaseSize(1);
     }
 
@@ -36,7 +34,7 @@ void PlayerSystem::eatFood(Player& player) {
 }
 
 void PlayerSystem::eatPlayer(Player& player, int victimSize) {
-    if (player.getSize() < PLAYER_MAX_SIZE) {
+    if (player.getSize() < GameConfig::PLAYER_MAX_SIZE) {
         Logger::info("Player increasing size: {}", victimSize / 2);
         Logger::info("Size before {}", player.getSize());
         player.increaseSize(int(victimSize/2));
@@ -45,3 +43,18 @@ void PlayerSystem::eatPlayer(Player& player, int victimSize) {
 
     player.addPoints(victimSize/2);
 }
+
+void PlayerSystem::kill(Player& player) {
+    player.setRespawnTimer( 5.0f);
+    player.setPoints(0);
+    player.setSize(GameConfig::PLAYER_MIN_SIZE);
+    player.kill();
+}
+
+void PlayerSystem::respawn(Player& player) {
+    auto spawnPosition = collisionSystem.getRandomSafePositionForSpawn();
+    player.respawn(spawnPosition);
+    Logger::info("Player {} respawned at position ({}, {}).", player.getNickname(), spawnPosition.first,
+                 spawnPosition.second);
+}
+

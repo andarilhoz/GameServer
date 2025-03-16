@@ -16,20 +16,20 @@ include_directories(/usr/local/include /usr/local/include/nlohmann)
 # Encontra o Boost
 find_package(Boost REQUIRED COMPONENTS system thread)
 
-# Cria o executável do servidor
+# Cria o executï¿½vel do servidor
 add_executable(GameServer 
     "src/Game/Entities/Player.h" "src/Game/Entities/Player.cpp"
     "src/Game/Networking/UdpServer.h" "src/Game/Networking/UdpServer.cpp"
     "src/Utils/Logger.h" "src/Utils/Logger.cpp"
     "src/Game/Core/GameServer.h" "src/Game/Core/GameServer.cpp"
     "src/Game/Networking/TcpServer.h" "src/Game/Networking/TcpServer.cpp"
-    src/main.cpp
+    "src/main.cpp"
     "src/Game/Core/GameState.h" "src/Game/Core/GameState.cpp"
     "src/Game/Systems/MovementHandler.h" "src/Game/Systems/MovementHandler.cpp"
      
      "src/Game/Entities/Food.h" "src/Game/Entities/Food.cpp" "src/Game/Systems/FoodController.h" "src/Game/Systems/FoodController.cpp" "src/Game/Systems/MapController.h" "src/Game/Systems/MapController.cpp" "src/Game/Entities/GridCell.cpp" "src/Game/Config/GameConfig.h" "src/Game/Core/GameLoop.h" "src/Game/Core/GameLoop.cpp" "src/Game/Systems/PlayerSystem.h" "src/Game/Systems/PlayerSystem.cpp" "src/Game/Networking/ConnectionManager.h" "src/Game/Networking/ConnectionManager.cpp" "src/Game/Networking/Messages/MessageHandler.h" "src/Game/Networking/Messages/GameMessage.h" "src/Game/Networking/Messages/GameMessage.cpp" "src/Game/Networking/Messages/MessageHandler.cpp" "src/Utils/Time.h" "src/Utils/Time.cpp" "src/Game/Systems/CollisionSystem.h" "src/Game/Systems/CollisionSystem.cpp")
 
-# Adiciona diretórios de includes
+# Adiciona diretï¿½rios de includes
 target_include_directories(GameServer PRIVATE ${Boost_INCLUDE_DIRS})
 
 # Linka Boost ao projeto

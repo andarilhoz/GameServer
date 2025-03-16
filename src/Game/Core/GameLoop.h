@@ -32,4 +32,6 @@ private:
 	PlayerSystem& playerSystem;
 	std::thread updateThread;
 	std::atomic<bool> running = true;
+
+    void respawnDeadPlayers(Player& player, float deltaTime);
 };

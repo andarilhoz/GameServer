@@ -7,7 +7,9 @@
 #include <vector>
 
 
-FoodController::FoodController(GameState& gameState, MapController& mapController) : gameState(gameState), mapController(mapController) {};
+FoodController::FoodController(GameState &gameState, MapController &mapController,
+                               CollisionSystem &collisionSystem)
+        : gameState(gameState), mapController(mapController), collisionSystem(collisionSystem) {};
 
 std::vector<Food> FoodController::generateFood(int foodAmount) {
     
@@ -32,15 +34,8 @@ int FoodController::generateFoodId() {
     return nextFoodId++;
 }
 
-
-std::unordered_map<GridCell, std::vector<int>> foodGrid;
-
-GridCell getGridCell(float x, float y) {
-    return { int(x / GameConfig::GRID_CELL_SIZE), int(y / GameConfig::GRID_CELL_SIZE) };
-}
-
 bool FoodController::isValidFoodPosition(float x, float y) {
-    GridCell cell = getGridCell(x, y);
+    GridCell cell = collisionSystem.getGridCell(x, y);
 
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -59,37 +54,14 @@ bool FoodController::isValidFoodPosition(float x, float y) {
 
 void FoodController::addFood(int foodId, float x, float y) {
     gameState.spawnFood(foodId, x, y);
-    GridCell cell = getGridCell(x, y);
+    GridCell cell = collisionSystem.getGridCell(x, y);
     foodGrid[cell].push_back(foodId);
 }
 
-int FoodController::checkFoodCollision(float playerX, float playerY, float playerRadius)
-{
-    float foodRadius = GameConfig::FOOD_SIZE;
-    std::vector<GridCell> cells = getAllCells(playerX, playerY, playerRadius);
-    for (auto cell : cells) {
-        for (int foodId : foodGrid[cell]) {
-            // Pega a struct/objeto da comida no gameState
-            const auto& food = gameState.getFood(foodId);
 
-            // Calcula a distância entre player e a comida
-            float dist = std::hypot(food.x - playerX, food.y - playerY);
-
-            // Se a distância for menor do que a soma dos raios, temos colisão
-            Logger::info("Radius: {}", playerRadius);
-            if (dist < (playerRadius + foodRadius)) {
-                return foodId; // Retorna o ID da comida colidida
-            }
-        }
-    }
-
-    // Se não encontrar colisão em nenhuma das células vizinhas, retorna -1
-    return -1;
-}
-
-void FoodController::removeFood(float foodId) {
+void FoodController::removeFood(int foodId) {
     const auto& food = gameState.getFood(foodId);
-    GridCell cell = getGridCell(food.x, food.y);
+    GridCell cell = collisionSystem.getGridCell(food.x, food.y);
     auto it = foodGrid.find(cell);
     if (it != foodGrid.end()) {
         auto& vec = it->second;
@@ -99,29 +71,6 @@ void FoodController::removeFood(float foodId) {
     
 }
 
-
-std::vector<GridCell> FoodController::getAllCells(float playerX, float playerY, float playerRadius)
-{
-    // Calcula o bounding box do círculo do player
-    float left = playerX - playerRadius;
-    float right = playerX + playerRadius;
-    float top = playerY - playerRadius;
-    float bottom = playerY + playerRadius;
-
-    // Converte para coordenadas de grade (célula)
-    int minCellX = static_cast<int>(std::floor(left / GameConfig::GRID_CELL_SIZE));
-    int maxCellX = static_cast<int>(std::floor(right / GameConfig::GRID_CELL_SIZE));
-    int minCellY = static_cast<int>(std::floor(top / GameConfig::GRID_CELL_SIZE));
-    int maxCellY = static_cast<int>(std::floor(bottom / GameConfig::GRID_CELL_SIZE));
-
-    std::vector<GridCell> cells;
-    cells.reserve((maxCellX - minCellX + 1) * (maxCellY - minCellY + 1));
-
-    for (int cx = minCellX; cx <= maxCellX; ++cx) {
-        for (int cy = minCellY; cy <= maxCellY; ++cy) {
-            cells.push_back({ cx, cy });
-        }
-    }
-
-    return cells;
+std::unordered_map<GridCell, std::vector<int>>& FoodController::getFoodGrid() {
+    return foodGrid;
 }

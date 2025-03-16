@@ -122,3 +122,14 @@ GameMessage MessageHandler::killPlayer(Player assassin, Player victim) {
     };
     return GameMessage::fromJson(killMessage);
 }
+
+GameMessage MessageHandler::serializeRespawnEvent(Player& player) {
+    json respawnMessage = {
+            {"type", "respawn"},
+            {"id", player.getId()},
+            {"x", player.getX()},
+            {"y", player.getY()}
+    };
+
+    return GameMessage::fromJson(respawnMessage);
+}

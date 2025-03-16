@@ -1,9 +1,10 @@
 #include "GameLoop.h"
 #include "../Networking/Messages/MessageHandler.h"
 
+#include "../Config/GameConfig.h"
 
 static constexpr std::chrono::milliseconds UPDATE_INTERVAL(50);
-const int MinFoodAvailable = 5;
+
 
 GameLoop::GameLoop(
 	GameState& gameState, 
@@ -17,8 +18,8 @@ GameLoop::GameLoop(
 	movementSystem(movementSystem),
 	playerSystem(playerSystem), 
 	connectionManager(connectionManager),
-	foodController(foodController),
-	collisionSystem(collisionSystem)
+	collisionSystem(collisionSystem),
+    foodController(foodController)
 {
 	updateThread = std::thread(&GameLoop::update, this);
 };
@@ -71,22 +72,24 @@ void GameLoop::update() {
 void GameLoop::generateFood() {
 	int foodAmount = gameState.getFoodList().size();
 
-	if (foodAmount < MinFoodAvailable) {
-		std::vector<Food> newFoods = foodController.generateFood(MinFoodAvailable);
+	if (foodAmount < GameConfig::MIN_FOOD) {
+		std::vector<Food> newFoods = foodController.generateFood(GameConfig::MIN_FOOD);
 		connectionManager.broadcastTcpMessage(MessageHandler::serializeFoodSpawn(newFoods));
 	}
 }
 
 void GameLoop::checkFoodCollision(Player& player) {
-	int foodId = foodController.checkFoodCollision(player.getX(), player.getY(), player.getSize());
-	if (foodId < 0) {
+	std::vector<int> foodsCollected = collisionSystem.checkFoodCollision(player.getX(), player.getY(), player.getSize(), foodController.getFoodGrid());
+	if (foodsCollected.empty()) {
 		return;
 	}
 	else {
-		foodController.removeFood(foodId);
-		playerSystem.eatFood(player);
-		Logger::info("Jogador {} comeu comida {}, tamanho: {}", player.getNickname(), foodId, player.getSize());
-		connectionManager.broadcastTcpMessage(MessageHandler::serializeEatEvent(foodId, player.getId()));
+        for (int foodId : foodsCollected) {
+            foodController.removeFood(foodId);
+            playerSystem.eatFood(player);
+            Logger::info("Jogador {} comeu comida {}, tamanho: {}", player.getNickname(), foodId, player.getSize());
+            connectionManager.broadcastTcpMessage(MessageHandler::serializeEatEvent(foodId, player.getId()));
+        }
 	}
 }
 

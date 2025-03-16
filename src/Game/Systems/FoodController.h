@@ -7,18 +7,24 @@
 #include <vector>
 
 #include "../Entities/GridCell.cpp"
+#include "CollisionSystem.h"
 
 class FoodController {
 public:
-	FoodController(GameState& gameState, MapController& mapController);
+	FoodController(GameState& gameState, MapController& mapController, CollisionSystem& collisionSystem);
 	std::vector<Food> generateFood(int foodAmount);
+	void removeFood(int foodId);
 
-	int checkFoodCollision(float playerX, float playerY, float playerRadius);
-	void removeFood(float foodId);
-	std::vector<GridCell> getAllCells(float playerX, float playerY, float playerRadius);
-private:	
+    std::unordered_map<GridCell, std::vector<int>>& getFoodGrid();
+
+private:
 	MapController& mapController;
 	GameState& gameState;
+    CollisionSystem& collisionSystem;
+
+
+    std::unordered_map<GridCell, std::vector<int>> foodGrid;
+
 	void addFood(int foodId, float x, float y);
 	bool isValidFoodPosition(float x, float y);
 	int generateFoodId();

@@ -9,16 +9,11 @@
 
 #include "../Networking/Messages/MessageHandler.h"
 
-constexpr float DISCONECT_TIMEOUT = 25.0f;
-
-constexpr float PLAYER_HALF_SIZE = 64.0f;
-
-
 GameServer::GameServer() :
     movementHandler(gameState),
-    playerSystem(gameState),
-    foodController(gameState, mapController),
     collisionSystem(gameState),
+    foodController(gameState, mapController, collisionSystem),
+    playerSystem(gameState, collisionSystem),
     gameLoop(gameState, movementHandler, playerSystem, connectionManager, foodController, collisionSystem)
 {
     connectionManager.subscribeTcpMessage(
@@ -72,15 +67,13 @@ void GameServer::processTcpMessage(std::string message, std::shared_ptr<boost::a
             return;
         }
 
-
         std::string nickname = request["nickname"];
         Player newPlayer = playerSystem.addPlayer(nickname);
         
         connectionManager.addTcpConnection(newPlayer.getId(), connection);
         Logger::info("New player connected: {}, id: {}", newPlayer.getNickname(), newPlayer.getId());
         
-        
-        
+
         connectionManager.sendTcpMessage(newPlayer.getId(), MessageHandler::serializeGameStateData(newPlayer.getId(), gameState));
         connectionManager.broadcastTcpMessage(MessageHandler::serializeNewPlayer(newPlayer));
 

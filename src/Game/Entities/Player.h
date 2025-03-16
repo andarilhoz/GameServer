@@ -19,12 +19,19 @@ public:
 
 	void setPosition(float newX, float newY);
 	void setDirection(float newX, float newY);
+    void setRespawnTimer(float respawnTime);
+    float getRespawnTime();
 	void increaseSize(float valueAdded);
 	void kill();
 	int getPoints();
 	void addPoints(int points);
+    void setSize(int newSize);
+    void setPoints(int newPoints);
 
 	std::string toJson() const;
+
+    void respawn(std::pair<float, float> pair1);
+    void updateRespawnTime(float delta);
 
 private:
 	int id;
@@ -32,6 +39,7 @@ private:
 	std::string nickname;
 	float x, y;
 	float directionX, directionY;
+    float respawn_timer;
 	float size;
 	bool alive;
 };

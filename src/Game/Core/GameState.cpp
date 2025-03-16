@@ -1,7 +1,7 @@
 #include "GameState.h"
 #include "../../Utils/Logger.h"
 
-constexpr float DISCONECT_TIMEOUT = 25.0f;
+#include "../Config/GameConfig.h"
 
 void GameState::addPlayer(Player player) {
 	Logger::info("Adicionando player: {}", player.getNickname());
@@ -40,7 +40,7 @@ bool GameState::isPlayerInactive(int playerId) {
 	if (lastActivity.find(playerId) == lastActivity.end()) return true;
 
 	float elapsed = duration<float>(steady_clock::now() - lastActivity[playerId]).count();
-	return elapsed > DISCONECT_TIMEOUT;
+	return elapsed > GameConfig::DISCONECT_TIMEOUT;
 }
 
 Player& GameState::getPlayer(int playerId) {
